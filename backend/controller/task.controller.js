@@ -102,28 +102,100 @@ export const createTask = async (req, res, next) => {
 };
 
 // GET TASKS
+
 export const getTasks = async (req, res, next) => {
   try {
-    const { status } = req.query;
+    const { status, priority, userId, sort = "newest" } = req.query;
 
+    // Validate status
     if (status && !validStatuses.includes(status)) {
       return next(errorHandler(400, "Invalid task status"));
     }
 
-    const filter = {};
+    // Validate priority
+    if (priority && !validPriorities.includes(priority)) {
+      return next(errorHandler(400, "Invalid task priority"));
+    }
+
+    // Validate sorting
+    const sortOptions = {
+      newest: { createdAt: -1 },
+      oldest: { createdAt: 1 },
+    };
+
+    if (!["newest", "oldest", "priority"].includes(sort)) {
+      return next(errorHandler(400, "Invalid sort option"));
+    }
+
+    // Only admins can filter tasks by developer
+    if (userId && req.user.role !== "admin") {
+      return next(
+        errorHandler(403, "Only admins can filter tasks by developer"),
+      );
+    }
+
+    const baseFilter = {};
+
+    if (req.user.role !== "admin") {
+      baseFilter.assignedTo = req.user.id;
+    } else if (userId) {
+      if (!isValidId(userId)) {
+        return next(errorHandler(400, "Invalid developer ID"));
+      }
+
+      const developer = await User.findOne({
+        _id: userId,
+        role: "user",
+      }).select("_id");
+
+      if (!developer) {
+        return next(errorHandler(404, "Developer not found"));
+      }
+
+      baseFilter.assignedTo = userId;
+    }
+
+    // Apply priority filter
+    if (priority) {
+      baseFilter.priority = priority;
+    }
+
+    // Apply status filter
+    const filter = { ...baseFilter };
 
     if (status) {
       filter.status = status;
     }
 
-    if (req.user.role !== "admin") {
-      filter.assignedTo = req.user.id;
-    }
-
+    // Fetch tasks
     const tasks = await Task.find(filter)
       .populate("assignedTo", "name email profileImageUrl")
-      .sort({ createdAt: -1 });
+      .sort(sort === "priority" ? { createdAt: -1 } : sortOptions[sort]);
 
+    // Custom priority sorting: High > Medium > Low
+    if (sort === "priority") {
+      const priorityRank = {
+        High: 3,
+        Medium: 2,
+        Low: 1,
+      };
+
+      tasks.sort((a, b) => {
+        const priorityDifference =
+          priorityRank[b.priority] - priorityRank[a.priority];
+
+        if (priorityDifference !== 0) {
+          return priorityDifference;
+        }
+
+        // Newest first when priorities are equal
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
+    }
+
+    // Format tasks
     const formattedTasks = tasks.map((task) => {
       const taskObject = task.toObject();
 
@@ -134,27 +206,25 @@ export const getTasks = async (req, res, next) => {
       return taskObject;
     });
 
-    const userFilter =
-      req.user.role === "admin" ? {} : { assignedTo: req.user.id };
-
+    // Counts reflect the selected developer and priority filter
     const [allTasks, pendingTasks, inProgressTasks, completedTasks] =
       await Promise.all([
-        Task.countDocuments(userFilter),
+        Task.countDocuments(baseFilter),
         Task.countDocuments({
-          ...userFilter,
+          ...baseFilter,
           status: "Pending",
         }),
         Task.countDocuments({
-          ...userFilter,
+          ...baseFilter,
           status: "In Progress",
         }),
         Task.countDocuments({
-          ...userFilter,
+          ...baseFilter,
           status: "Completed",
         }),
       ]);
 
-    res.status(200).json({
+    return res.status(200).json({
       tasks: formattedTasks,
       statusSummary: {
         all: allTasks,

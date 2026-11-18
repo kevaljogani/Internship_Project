@@ -1,18 +1,19 @@
-import React from "react"
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import Login from "./pages/auth/Login"
-import SignUp from "./pages/auth/SignUp"
-import Dashboard from "./pages/admin/Dashboard"
-import ManageTasks from "./pages/admin/ManageTasks"
-import ManageUsers from "./pages/admin/ManageUsers"
-import CreateTask from "./pages/admin/CreateTask"
-import PrivateRoute from "./routes/PrivateRoute"
-import UserDashboard from "./pages/user/UserDashboard"
-import TaskDetails from "./pages/user/TaskDetails"
-import MyTasks from "./pages/user/MyTasks"
-import { useSelector } from "react-redux"
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/auth/Login";
+import SignUp from "./pages/auth/SignUp";
+import Dashboard from "./pages/admin/Dashboard";
+import ManageTasks from "./pages/admin/ManageTasks";
+import ManageUsers from "./pages/admin/ManageUsers";
+import CreateTask from "./pages/admin/CreateTask";
+import PrivateRoute from "./routes/PrivateRoute";
+import UserDashboard from "./pages/user/UserDashboard";
+import TaskDetails from "./pages/user/TaskDetails";
+import MyTasks from "./pages/user/MyTasks";
+import { useSelector } from "react-redux";
+import UserTasks from "./pages/admin/UserTasks";
 
-import toast, { Toaster } from "react-hot-toast"
+import toast, { Toaster } from "react-hot-toast";
 
 const App = () => {
   return (
@@ -27,6 +28,7 @@ const App = () => {
             <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path="/admin/tasks" element={<ManageTasks />} />
             <Route path="/admin/users" element={<ManageUsers />} />
+            <Route path="/admin/users/:userId/tasks" element={<UserTasks />} />
             <Route path="/admin/create-task" element={<CreateTask />} />
           </Route>
 
@@ -44,21 +46,21 @@ const App = () => {
 
       <Toaster />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
 
 const Root = () => {
-  const { currentUser } = useSelector((state) => state.user)
+  const { currentUser } = useSelector((state) => state.user);
 
   if (!currentUser) {
-    return <Navigate to={"/login"} />
+    return <Navigate to={"/login"} />;
   }
 
   return currentUser.role === "admin" ? (
     <Navigate to={"/admin/dashboard"} />
   ) : (
     <Navigate to={"/user/dashboard"} />
-  )
-}
+  );
+};

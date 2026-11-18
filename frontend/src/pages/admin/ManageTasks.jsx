@@ -66,7 +66,10 @@ const ManageTasks = () => {
         { responseType: "blob" }
       );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(
+        new Blob([response.data])
+      );
+
       const link = document.createElement("a");
 
       link.href = url;
@@ -74,10 +77,12 @@ const ManageTasks = () => {
 
       document.body.appendChild(link);
       link.click();
+
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading task report:", error);
+
       toast.error("Unable to download task report");
     }
   };
@@ -147,13 +152,13 @@ const ManageTasks = () => {
                 createdAt={item.createdAt}
                 updatedAt={item.updatedAt}
                 dueDate={item.dueDate}
-                assignedTo={item.assignedTo?.map(
-                  (user) => user.profileImageUrl
-                )}
+                assignedTo={item.assignedTo || []}
                 attachmentCount={item.attachments?.length || 0}
                 completedTodoCount={
                   item.completedCount ??
-                  item.todoChecklist?.filter((todo) => todo.completed).length ??
+                  item.todoChecklist?.filter(
+                    (todo) => todo.completed
+                  ).length ??
                   0
                 }
                 todoChecklist={item.todoChecklist || []}

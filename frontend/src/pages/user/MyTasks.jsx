@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { useNavigate } from "react-router-dom";
@@ -56,7 +55,7 @@ const MyTask = () => {
       console.error("Error fetching tasks:", error);
 
       toast.error(
-        error.response?.data?.message || "Unable to load your tasks."
+        error.response?.data?.message || "Unable to load your tasks.",
       );
 
       setAllTasks([]);
@@ -104,7 +103,7 @@ const MyTask = () => {
               const checklist = item.todoChecklist || [];
 
               const completedTodoCount = checklist.filter(
-                (todo) => todo.completed
+                (todo) => todo.completed,
               ).length;
 
               return (
@@ -118,11 +117,7 @@ const MyTask = () => {
                   createdAt={item.createdAt}
                   updatedAt={item.updatedAt}
                   dueDate={item.dueDate}
-                  assignedTo={
-                    item.assignedTo
-                      ?.map((user) => user.profileImageUrl)
-                      .filter(Boolean) || []
-                  }
+                  assignedTo={item.assignedTo || []}
                   attachmentCount={item.attachments?.length || 0}
                   completedTodoCount={completedTodoCount}
                   todoChecklist={checklist}

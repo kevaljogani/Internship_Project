@@ -1,4 +1,3 @@
-
 import React from "react";
 import Progress from "./Progress";
 import moment from "moment";
@@ -52,7 +51,6 @@ const TaskCard = ({
       : "N/A";
   };
 
-  // A newly created task has no meaningful update.
   const isUpdated =
     createdAt &&
     updatedAt &&
@@ -62,7 +60,7 @@ const TaskCard = ({
 
   return (
     <div
-      className="bg-white rounded-xl py-4 shadow-md shadow-gray-100 border border-gray-200/50 cursor-pointer"
+      className="bg-white rounded-xl py-4 shadow-md shadow-gray-100 border border-gray-200/50 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
       onClick={onClick}
     >
       <div className="flex items-end gap-3 px-4 flex-wrap">
@@ -119,9 +117,7 @@ const TaskCard = ({
           } gap-2 my-3`}
         >
           <div>
-            <label className="text-xs text-gray-500">
-              Created On
-            </label>
+            <label className="text-xs text-gray-500">Created On</label>
             <p className="text-[12px] font-medium text-gray-900">
               {formatDate(createdAt)}
             </p>
@@ -129,9 +125,7 @@ const TaskCard = ({
 
           {isUpdated && (
             <div>
-              <label className="text-xs text-gray-500">
-                Updated On
-              </label>
+              <label className="text-xs text-gray-500">Updated On</label>
               <p className="text-[12px] font-medium text-purple-700">
                 {formatDate(updatedAt)}
               </p>
@@ -139,9 +133,7 @@ const TaskCard = ({
           )}
 
           <div>
-            <label className="text-xs text-gray-500">
-              Due Date
-            </label>
+            <label className="text-xs text-gray-500">Due Date</label>
             <p className="text-[12px] font-medium text-gray-900">
               {formatDate(dueDate)}
             </p>
@@ -149,14 +141,12 @@ const TaskCard = ({
         </div>
 
         <div className="flex items-center justify-between mt-3">
-          <AvatarGroup avatars={assignedTo || []} />
+          <AvatarGroup avatars={assignedTo || []} maxVisible={5} />
 
           {attachmentCount > 0 && (
             <div className="flex items-center gap-2 bg-blue-50 px-2.5 py-1.5 rounded-lg">
               <FaFileLines className="text-primary" />
-              <span className="text-xs text-gray-900">
-                {attachmentCount}
-              </span>
+              <span className="text-xs text-gray-900">{attachmentCount}</span>
             </div>
           )}
         </div>
