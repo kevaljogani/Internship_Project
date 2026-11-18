@@ -5,7 +5,8 @@ import jwt from "jsonwebtoken";
 
 export const signup = async (req, res, next) => {
   const { name, email, password, adminJoinCode } = req.body;
-  const profileImageUrl = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  const profileImageUrl =
+    "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
   if (
     !name ||
@@ -45,9 +46,9 @@ export const signup = async (req, res, next) => {
   try {
     await newUser.save();
 
-    res.json("Signup successful");
+    res.status(200).json({ success: true, message: "Signup successful" });
   } catch (error) {
-    next(error.message);
+    next(error); // <--- CHANGE THIS FROM error.message to error
   }
 };
 
