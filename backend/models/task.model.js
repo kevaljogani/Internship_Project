@@ -1,26 +1,30 @@
-import mongoose from "mongoose"
+
+import mongoose from "mongoose";
 
 const todoSchema = new mongoose.Schema({
   text: {
     type: String,
     required: true,
+    trim: true,
   },
 
   completed: {
     type: Boolean,
     default: false,
   },
-})
+});
 
 const taskSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: true,
+      trim: true,
     },
 
     description: {
       type: String,
+      default: "",
     },
 
     priority: {
@@ -47,12 +51,11 @@ const taskSchema = new mongoose.Schema(
       },
     ],
 
-    createdBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
     attachments: [
       {
@@ -62,11 +65,18 @@ const taskSchema = new mongoose.Schema(
 
     todoChecklist: [todoSchema],
 
-    progress: { type: Number, default: 0 },
+    progress: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
   },
-  { timestamps: true }
-)
+  {
+    timestamps: true,
+  }
+);
 
-const Task = mongoose.model("Task", taskSchema)
+const Task = mongoose.model("Task", taskSchema);
 
-export default Task
+export default Task;

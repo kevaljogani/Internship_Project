@@ -10,26 +10,59 @@ import reportRouter from "./routes/report.route.js";
 
 dotenv.config();
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+
+let dbConnectionPromise;
+
+const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  if (!process.env.MONGO_URI) {
+    throw new Error("MONGO_URI environment variable is missing");
+  }
+
+  if (!dbConnectionPromise) {
+    dbConnectionPromise = mongoose
+      .connect(process.env.MONGO_URI)
+      .then(() => {
+        console.log("Connected to MongoDB");
+      })
+      .catch((error) => {
+        dbConnectionPromise = null;
+        throw error;
+      });
+  }
+
+  await dbConnectionPromise;
+};
+
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 
+
+
+
 app.use(
   cors({
-    origin: true,
+    origin: [
+      process.env.FRONT_END_URL,
+      "http://localhost:5173",
+    ],
     credentials: true,
-  }),
+  })
 );
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // API Routes
 app.use("/api/auth", authRouter);

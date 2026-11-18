@@ -147,7 +147,10 @@ const UserDashboard = () => {
         </div>
 
         {/* Recent Task Section */}
-        <RecentTasks tasks={dashboardData?.recentTasks} />
+        <RecentTasks
+  tasks={dashboardData?.recentTasks || []}
+  seeMorePath="/user/tasks"
+/>
       </div>
     </DashboardLayout>
   )

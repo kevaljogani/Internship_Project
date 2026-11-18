@@ -1,17 +1,21 @@
-import moment from "moment"
-import React from "react"
-import { useNavigate } from "react-router-dom"
 
-const RecentTasks = ({ tasks }) => {
-  const navigate = useNavigate()
+import moment from "moment";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
+const RecentTasks = ({ tasks = [], seeMorePath = "/admin/tasks" }) => {
+  const navigate = useNavigate();
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden">
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-800">Recent Tasks</h3>
+        <h3 className="text-lg font-semibold text-gray-800">
+          Recent Tasks
+        </h3>
 
         <button
-          onClick={() => navigate("/admin/tasks")}
+          type="button"
+          onClick={() => navigate(seeMorePath)}
           className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors p-2 bg-blue-50 hover:bg-blue-100"
         >
           See More →
@@ -19,7 +23,7 @@ const RecentTasks = ({ tasks }) => {
       </div>
 
       <div className="p-6">
-        {tasks?.length > 0 ? (
+        {tasks.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -57,8 +61,8 @@ const RecentTasks = ({ tasks }) => {
                           task.status === "Completed"
                             ? "bg-green-100 text-green-800"
                             : task.status === "Pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-blue-100 text-blue-800"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-blue-100 text-blue-800"
                         }`}
                       >
                         {task.status}
@@ -71,8 +75,8 @@ const RecentTasks = ({ tasks }) => {
                           task.priority === "High"
                             ? "bg-red-100 text-red-800"
                             : task.priority === "Medium"
-                            ? "bg-orange-100 text-orange-800"
-                            : "bg-gray-100 text-gray-800"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {task.priority}
@@ -80,7 +84,9 @@ const RecentTasks = ({ tasks }) => {
                     </td>
 
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {moment(task.createdAt).format("MMM Do, YYYY")}
+                      {task.createdAt
+                        ? moment(task.createdAt).format("MMM Do, YYYY")
+                        : "N/A"}
                     </td>
                   </tr>
                 ))}
@@ -94,7 +100,7 @@ const RecentTasks = ({ tasks }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default RecentTasks
+export default RecentTasks;

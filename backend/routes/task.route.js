@@ -1,5 +1,7 @@
-import express from "express"
-import { adminOnly, verifyToken } from "../utils/verifyUser.js"
+
+import express from "express";
+import { adminOnly, verifyToken } from "../utils/verifyUser.js";
+
 import {
   createTask,
   deleteTask,
@@ -10,26 +12,35 @@ import {
   updateTaskChecklist,
   updateTaskStatus,
   userDashboardData,
-} from "../controller/task.controller.js"
+} from "../controller/task.controller.js";
 
-const router = express.Router()
+const router = express.Router();
 
-router.post("/create", verifyToken, adminOnly, createTask)
+// Admin: Create a task
+router.post("/create", verifyToken, adminOnly, createTask);
 
-router.get("/", verifyToken, getTasks)
+// Admin and Users: Fetch tasks
+router.get("/", verifyToken, getTasks);
 
-router.get("/dashboard-data", verifyToken, adminOnly, getDashboardData)
+// Admin: Dashboard statistics
+router.get("/dashboard-data", verifyToken, adminOnly, getDashboardData);
 
-router.get("/user-dashboard-data", verifyToken, userDashboardData)
+// Users: Dashboard statistics
+router.get("/user-dashboard-data", verifyToken, userDashboardData);
 
-router.get("/:id", verifyToken, getTaskById)
+// Admin and assigned users: Get task details
+router.get("/:id", verifyToken, getTaskById);
 
-router.put("/:id", verifyToken, updateTask)
+// Admin only: Update task details and assignments
+router.put("/:id", verifyToken, adminOnly, updateTask);
 
-router.delete("/:id", verifyToken, adminOnly, deleteTask)
+// Admin only: Delete task
+router.delete("/:id", verifyToken, adminOnly, deleteTask);
 
-router.put("/:id/status", verifyToken, updateTaskStatus)
+// Admin and assigned users: Update task status
+router.put("/:id/status", verifyToken, updateTaskStatus);
 
-router.put("/:id/todo", verifyToken, updateTaskChecklist)
+// Admin and assigned users: Update task checklist
+router.put("/:id/todo", verifyToken, updateTaskChecklist);
 
-export default router
+export default router;
