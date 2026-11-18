@@ -1,66 +1,50 @@
-import express from "express"
-import cors from "cors"
-import dotenv from "dotenv"
-import mongoose from "mongoose"
-import cookieParser from "cookie-parser"
-import path from "path"
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import authRouter from "./routes/auth.route.js";
+import userRouter from "./routes/user.route.js";
+import taskRouter from "./routes/task.route.js";
+import reportRouter from "./routes/report.route.js";
 
-import authRoutes from "./routes/auth.route.js"
-import userRoutes from "./routes/user.route.js"
-import taskRoutes from "./routes/task.route.js"
-import reportRoutes from "./routes/report.route.js"
-import { fileURLToPath } from "url"
-
-dotenv.config()
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+dotenv.config();
 
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("Database is connected")
+    console.log("Connected to MongoDB");
   })
   .catch((err) => {
-    console.log(err)
-  })
+    console.log(err);
+  });
 
-const app = express()
+const app = express();
 
-// Middleware to handle cors
+app.use(express.json());
+app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.FRONT_END_URL || "http://localhost:5174",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: true,
     credentials: true,
-  })
-)
+  }),
+);
 
-// Middleware to handle JSON object in req body
-app.use(express.json())
+// API Routes
+app.use("/api/auth", authRouter);
+app.use("/api/user", userRouter);
+app.use("/api/tasks", taskRouter);
+app.use("/api/report", reportRouter);
 
-app.use(cookieParser())
-
-app.listen(3000, () => {
-  console.log("Server is running on port 3000!")
-})
-
-app.use("/api/auth", authRoutes)
-app.use("/api/users", userRoutes)
-app.use("/api/tasks", taskRoutes)
-app.use("/api/reports", reportRoutes)
-
-// serve static files from "uploads" folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads")))
-
+// Error handling middleware
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500
-
-  const message = err.message || "Internal Server Error"
-
-  res.status(statusCode).json({
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  return res.status(statusCode).json({
     success: false,
     statusCode,
     message,
-  })
-})
+  });
+});
+
+export default app;
