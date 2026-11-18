@@ -32,7 +32,10 @@ const MyTask = () => {
         },
       });
 
-      const tasks = response.data?.tasks || [];
+      const tasks = Array.isArray(response.data?.tasks)
+        ? response.data.tasks
+        : [];
+
       const statusSummary = response.data?.statusSummary || {};
 
       setAllTasks(tasks);
@@ -55,6 +58,8 @@ const MyTask = () => {
       toast.error(
         error.response?.data?.message || "Unable to load your tasks."
       );
+
+      setAllTasks([]);
     } finally {
       setLoading(false);
     }
@@ -89,45 +94,42 @@ const MyTask = () => {
           <div className="text-center py-10 text-gray-500">
             Loading your tasks...
           </div>
+        ) : allTasks.length === 0 ? (
+          <div className="col-span-full text-center py-10">
+            <p className="text-gray-500">No tasks found.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            {allTasks.length > 0 ? (
-              allTasks.map((item) => {
-                const checklist = item.todoChecklist || [];
+            {allTasks.map((item) => {
+              const checklist = item.todoChecklist || [];
 
-                const completedTodoCount = checklist.filter(
-                  (todo) => todo.completed
-                ).length;
+              const completedTodoCount = checklist.filter(
+                (todo) => todo.completed
+              ).length;
 
-                return (
-                  <TaskCard
-                    key={item._id}
-                    title={item.title}
-                    description={item.description}
-                    priority={item.priority}
-                    status={item.status}
-                    progress={item.progress}
-                    createdAt={item.createdAt}
-                    dueDate={item.dueDate}
-                    assignedTo={
-                      item.assignedTo
-                        ?.map((user) => user.profileImageUrl)
-                        .filter(Boolean) || []
-                    }
-                    attachmentCount={item.attachments?.length || 0}
-                    completedTodoCount={completedTodoCount}
-                    todoChecklist={checklist}
-                    onClick={() => handleClick(item._id)}
-                  />
-                );
-              })
-            ) : (
-              <div className="col-span-full text-center py-10">
-                <p className="text-gray-500">
-                  No tasks found.
-                </p>
-              </div>
-            )}
+              return (
+                <TaskCard
+                  key={item._id}
+                  title={item.title}
+                  description={item.description}
+                  priority={item.priority}
+                  status={item.status}
+                  progress={item.progress}
+                  createdAt={item.createdAt}
+                  updatedAt={item.updatedAt}
+                  dueDate={item.dueDate}
+                  assignedTo={
+                    item.assignedTo
+                      ?.map((user) => user.profileImageUrl)
+                      .filter(Boolean) || []
+                  }
+                  attachmentCount={item.attachments?.length || 0}
+                  completedTodoCount={completedTodoCount}
+                  todoChecklist={checklist}
+                  onClick={() => handleClick(item._id)}
+                />
+              );
+            })}
           </div>
         )}
       </div>

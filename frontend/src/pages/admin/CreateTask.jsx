@@ -116,6 +116,17 @@ const CreateTask = () => {
       return;
     }
 
+    // Ask for confirmation before updating an existing task
+    if (taskId) {
+      const confirmed = window.confirm(
+        "Are you sure you want to update this task?"
+      );
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
     const todoChecklist = taskData.todoChecklist.map((item) => {
       const previousItem = currentTask?.todoChecklist?.find(
         (todo) => todo.text === item
@@ -345,12 +356,21 @@ const CreateTask = () => {
                 />
               </div>
 
-              {/* Submit */}
-              <div className="flex justify-end mt-7">
+              {/* Submit and Cancel */}
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-7">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => navigate("/admin/tasks")}
+                  className="px-5 py-3 bg-gray-200 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-300 cursor-pointer w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  CANCEL
+                </button>
+
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-3 bg-green-500 border border-green-300 rounded-md text-white hover:bg-green-700 cursor-pointer w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-3 bg-green-500 border border-green-300 rounded-md text-white hover:bg-green-700 cursor-pointer w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading
                     ? "PLEASE WAIT..."

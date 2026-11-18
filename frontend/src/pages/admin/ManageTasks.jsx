@@ -41,11 +41,7 @@ const ManageTasks = () => {
         { label: "Completed", count: statusSummary.completedTasks || 0 },
       ]);
     } catch (error) {
-      console.error(
-        "Error fetching tasks:",
-        error.response?.status,
-        error.response?.data || error.message
-      );
+      console.error("Error fetching tasks:", error);
 
       toast.error(
         error.response?.data?.message || "Unable to load tasks"
@@ -67,15 +63,10 @@ const ManageTasks = () => {
     try {
       const response = await axiosInstance.get(
         "/report/export/tasks",
-        {
-          responseType: "blob",
-        }
+        { responseType: "blob" }
       );
 
-      const url = window.URL.createObjectURL(
-        new Blob([response.data])
-      );
-
+      const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
 
       link.href = url;
@@ -83,12 +74,10 @@ const ManageTasks = () => {
 
       document.body.appendChild(link);
       link.click();
-
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading task report:", error);
-
       toast.error("Unable to download task report");
     }
   };
@@ -141,21 +130,9 @@ const ManageTasks = () => {
           </div>
         ) : allTasks.length === 0 ? (
           <div className="text-center py-12">
-            <h3 className="text-lg font-semibold text-gray-700">
-              No tasks found
-            </h3>
-
-            <p className="text-sm text-gray-500 mt-2">
-              Create your first task and assign it to your team members.
+            <p className="text-gray-500">
+              No tasks found.
             </p>
-
-            <button
-              type="button"
-              onClick={() => navigate("/admin/create-task")}
-              className="mt-4 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-            >
-              Create Task
-            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -168,6 +145,7 @@ const ManageTasks = () => {
                 status={item.status}
                 progress={item.progress}
                 createdAt={item.createdAt}
+                updatedAt={item.updatedAt}
                 dueDate={item.dueDate}
                 assignedTo={item.assignedTo?.map(
                   (user) => user.profileImageUrl

@@ -169,15 +169,10 @@ export const getTasks = async (req, res, next) => {
 };
 
 // GET TASK BY ID
+
 export const getTaskById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    if (!isValidId(id)) {
-      return next(errorHandler(400, "Invalid task ID"));
-    }
-
-    const task = await Task.findById(id).populate(
+    const task = await Task.findById(req.params.id).populate(
       "assignedTo",
       "name email profileImageUrl",
     );
@@ -186,13 +181,20 @@ export const getTaskById = async (req, res, next) => {
       return next(errorHandler(404, "Task not found"));
     }
 
-    if (req.user.role !== "admin" && !isAssignedToUser(task, req.user.id)) {
+    const currentUserId = String(req.user.id || req.user._id);
+
+    const isAssigned = task.assignedTo.some((user) => {
+      const assignedUserId = String(user?._id || user);
+      return assignedUserId === currentUserId;
+    });
+
+    if (req.user.role !== "admin" && !isAssigned) {
       return next(
         errorHandler(403, "You are not authorized to view this task"),
       );
     }
 
-    res.status(200).json(task);
+    return res.status(200).json(task);
   } catch (error) {
     next(error);
   }
@@ -369,6 +371,7 @@ export const updateTaskStatus = async (req, res, next) => {
 };
 
 // UPDATE TASK CHECKLIST
+
 export const updateTaskChecklist = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -388,7 +391,14 @@ export const updateTaskChecklist = async (req, res, next) => {
       return next(errorHandler(404, "Task not found"));
     }
 
-    if (req.user.role !== "admin" && !isAssignedToUser(task, req.user.id)) {
+    // Verify that the current user is assigned to this task.
+    const currentUserId = String(req.user.id || req.user._id);
+
+    const isAssigned = task.assignedTo.some(
+      (user) => String(user?._id || user) === currentUserId,
+    );
+
+    if (req.user.role !== "admin" && !isAssigned) {
       return next(
         errorHandler(403, "You are not authorized to update this checklist"),
       );
@@ -431,7 +441,7 @@ export const updateTaskChecklist = async (req, res, next) => {
       "name email profileImageUrl",
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Task checklist updated",
       task: updatedTask,
     });

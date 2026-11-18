@@ -1,8 +1,9 @@
-import React from "react"
-import Progress from "./Progress"
-import moment from "moment"
-import AvatarGroup from "./AvatarGroup"
-import { FaFileLines } from "react-icons/fa6"
+
+import React from "react";
+import Progress from "./Progress";
+import moment from "moment";
+import AvatarGroup from "./AvatarGroup";
+import { FaFileLines } from "react-icons/fa6";
 
 const TaskCard = ({
   title,
@@ -11,6 +12,7 @@ const TaskCard = ({
   status,
   progress,
   createdAt,
+  updatedAt,
   dueDate,
   assignedTo,
   attachmentCount,
@@ -21,28 +23,34 @@ const TaskCard = ({
   const getStatusTagColor = () => {
     switch (status) {
       case "Pending":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       case "In Progress":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
       case "Completed":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       default:
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
     }
-  }
+  };
 
   const getPriorityTagColor = () => {
     switch (priority) {
       case "High":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       case "Medium":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       case "Low":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       default:
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
     }
-  }
+  };
+
+  const formatDate = (date) => {
+    return date && moment(date).isValid()
+      ? moment(date).format("Do MMM YYYY")
+      : "N/A";
+  };
 
   return (
     <div
@@ -68,8 +76,8 @@ const TaskCard = ({
           status === "In Progress"
             ? "border-cyan-500"
             : status === "Completed"
-            ? "border-indigo-500"
-            : "border-violet-500"
+              ? "border-indigo-500"
+              : "border-violet-500"
         }`}
       >
         <p className="text-lg font-medium text-gray-800 mt-4 line-clamp-2">
@@ -83,7 +91,7 @@ const TaskCard = ({
         <p className="text-[13px] text-gray-700/80 font-medium mt-2 mb-2 leading-[18px]">
           Task Done:{" "}
           <span className="font-semibold text-gray-700">
-            {completedTodoCount} / {todoChecklist.length || 0}
+            {completedTodoCount} / {todoChecklist?.length || 0}
           </span>
         </p>
 
@@ -91,20 +99,31 @@ const TaskCard = ({
       </div>
 
       <div className="px-4">
-        <div className="flex items-center justify-between my-1">
+        <div className="grid grid-cols-3 gap-2 my-3">
           <div>
-            <label className="text-xs text-gray-500">Start Date</label>
-
-            <p className="text-[13px] font-medium text-gray-900">
-              {moment(createdAt).format("Do MMM YYYY")}
+            <label className="text-xs text-gray-500">
+              Created On
+            </label>
+            <p className="text-[12px] font-medium text-gray-900">
+              {formatDate(createdAt)}
             </p>
           </div>
 
           <div>
-            <label className="text-xs text-gray-500">Due Date</label>
+            <label className="text-xs text-gray-500">
+              Updated On
+            </label>
+            <p className="text-[12px] font-medium text-gray-900">
+              {formatDate(updatedAt)}
+            </p>
+          </div>
 
-            <p className="text-[13px] font-medium text-gray-900">
-              {moment(dueDate).format("Do MMM YYYY")}
+          <div>
+            <label className="text-xs text-gray-500">
+              Due Date
+            </label>
+            <p className="text-[12px] font-medium text-gray-900">
+              {formatDate(dueDate)}
             </p>
           </div>
         </div>
@@ -115,14 +134,15 @@ const TaskCard = ({
           {attachmentCount > 0 && (
             <div className="flex items-center gap-2 bg-blue-50 px-2.5 py-1.5 rounded-lg">
               <FaFileLines className="text-primary" />
-
-              <span className="text-xs text-gray-900">{attachmentCount}</span>
+              <span className="text-xs text-gray-900">
+                {attachmentCount}
+              </span>
             </div>
           )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TaskCard
+export default TaskCard;
