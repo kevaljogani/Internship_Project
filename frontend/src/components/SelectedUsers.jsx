@@ -1,58 +1,58 @@
-import React, { useEffect, useState } from "react";
-import axiosInstance from "../utils/axioInstance";
-import { FaUsers } from "react-icons/fa";
-import Modal from "./Modal";
-import AvatarGroup from "./AvatarGroup";
+import React, { useEffect, useState } from "react"
+import axiosInstance from "../utils/axioInstance"
+import { FaUsers } from "react-icons/fa"
+import Modal from "./Modal"
+import AvatarGroup from "./AvatarGroup"
 
 const SelectedUsers = ({ selectedUser, setSelectedUser }) => {
-  const [allUsers, setAllUsers] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [tempSelectedUser, setTempSelectedUser] = useState([]);
+  const [allUsers, setAllUsers] = useState([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [tempSelectedUser, setTempSelectedUser] = useState([])
 
   // console.log(allUsers)
 
   const getAllUsers = async () => {
     try {
-      const response = await axiosInstance.get("/user/get-users");
+      const response = await axiosInstance.get("/user/get-users")
 
       if (response.data?.length > 0) {
-        setAllUsers(response.data);
+        setAllUsers(response.data)
       }
     } catch (error) {
-      console.log("Error fetching users:", error);
+      console.log("Error fetching users:", error)
     }
-  };
+  }
 
   const toggleUserSelection = (userId) => {
     setTempSelectedUser((prev) =>
       prev.includes(userId)
         ? prev.filter((id) => id !== userId)
-        : [...prev, userId],
-    );
-  };
+        : [...prev, userId]
+    )
+  }
 
   const handleAssign = () => {
-    setSelectedUser(tempSelectedUser);
-    setIsModalOpen(false);
-  };
+    setSelectedUser(tempSelectedUser)
+    setIsModalOpen(false)
+  }
 
   const selectedUserAvatars = allUsers
     .filter((user) => selectedUser.includes(user._id))
-    .map((user) => user.profileImageUrl);
+    .map((user) => user.profileImageUrl)
 
   useEffect(() => {
-    getAllUsers();
+    getAllUsers()
 
-    return () => {};
-  }, []);
+    return () => {}
+  }, [])
 
   useEffect(() => {
     if (selectedUser.length === 0) {
-      setTempSelectedUser([]);
+      setTempSelectedUser([])
     }
 
-    return () => {};
-  }, [selectedUser]);
+    return () => {}
+  }, [selectedUser])
 
   return (
     <div className="space-y-4 mt-2">
@@ -122,7 +122,7 @@ const SelectedUsers = ({ selectedUser, setSelectedUser }) => {
         </div>
       </Modal>
     </div>
-  );
-};
+  )
+}
 
 export default SelectedUsers;
