@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../../utils/axioInstance";
 import DashboardLayout from "../../components/DashboardLayout";
 import moment from "moment";
@@ -10,12 +10,15 @@ import toast from "react-hot-toast";
 
 const TaskDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [task, setTask] = useState(null);
   const [draftChecklist, setDraftChecklist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [confirmation, setConfirmation] = useState(null);
 
   const getStatusTagColor = (status) => {
     switch (status) {
@@ -53,7 +56,7 @@ const TaskDetails = () => {
     }
   };
 
-  // Update checklist locally without calling the API
+  // Update checklist locally only
   const updateTodoChecklist = (index) => {
     if (saving) return;
 
@@ -66,7 +69,7 @@ const TaskDetails = () => {
     );
   };
 
-  // Check whether there are unsaved changes
+  // Detect unsaved changes
   const hasChanges =
     task &&
     JSON.stringify(
@@ -80,7 +83,7 @@ const TaskDetails = () => {
         }))
       );
 
-  // Save all checklist changes
+  // Save checklist changes after confirmation
   const saveChecklistChanges = async () => {
     if (!task || !hasChanges || saving) return;
 
@@ -95,10 +98,17 @@ const TaskDetails = () => {
         setTask(response.data.task);
         setDraftChecklist(response.data.task.todoChecklist || []);
       } else {
-        await getTaskDetailsById();
+        const refreshedTask = await axiosInstance.get(`/tasks/${id}`);
+
+        setTask(refreshedTask.data);
+        setDraftChecklist(refreshedTask.data.todoChecklist || []);
       }
 
+      setConfirmation(null);
+
       toast.success("Checklist changes saved successfully!");
+
+      navigate("/user/tasks");
     } catch (error) {
       console.error("Error saving checklist:", error);
 
@@ -106,17 +116,23 @@ const TaskDetails = () => {
         error.response?.data?.message ||
           "Unable to save changes. Please try again."
       );
+
+      setConfirmation(null);
     } finally {
       setSaving(false);
     }
   };
 
-  // Discard unsaved checklist changes
-  const cancelChecklistChanges = () => {
-    if (saving || !task) return;
+  // Discard changes and return to My Tasks
+  const discardChecklistChanges = () => {
+    if (saving) return;
 
-    setDraftChecklist(task.todoChecklist || []);
-    toast.success("Unsaved changes discarded.");
+    setDraftChecklist(task?.todoChecklist || []);
+    setConfirmation(null);
+
+    toast.success("Changes discarded.");
+
+    navigate("/user/tasks");
   };
 
   // Open attachment link safely
@@ -256,9 +272,7 @@ const TaskDetails = () => {
                     </label>
 
                     <span className="text-xs text-gray-500">
-                      {completedCount}
-                      {" / "}
-                      {draftChecklist.length} completed
+                      {completedCount} / {draftChecklist.length} completed
                     </span>
                   </div>
 
@@ -281,23 +295,25 @@ const TaskDetails = () => {
                   {/* Save and Cancel buttons */}
                   {draftChecklist.length > 0 && (
                     <div className="flex flex-col sm:flex-row justify-end gap-3 mt-5 pt-4 border-t border-gray-100">
+
                       <button
                         type="button"
-                        onClick={cancelChecklistChanges}
-                        disabled={!hasChanges || saving}
-                        className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                        onClick={() => setConfirmation("cancel")}
+                        disabled={saving}
+                        className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-50"
                       >
                         Cancel Changes
                       </button>
 
                       <button
                         type="button"
-                        onClick={saveChecklistChanges}
+                        onClick={() => setConfirmation("save")}
                         disabled={!hasChanges || saving}
                         className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
-                        {saving ? "Saving..." : "Save Changes"}
+                        Save Changes
                       </button>
+
                     </div>
                   )}
                 </div>
@@ -324,6 +340,79 @@ const TaskDetails = () => {
           </div>
         )}
       </div>
+
+      {/* Centered confirmation dialogs */}
+      {confirmation && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+          >
+            {confirmation === "save" ? (
+              <>
+                <h3 className="text-xl font-bold text-gray-800">
+                  Confirm Save Changes
+                </h3>
+
+                <p className="mt-3 text-sm leading-6 text-gray-600">
+                  Are you sure you want to save your checklist changes?
+                  These changes will be permanently saved to the task.
+                </p>
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => setConfirmation(null)}
+                    className="rounded-lg border border-gray-300 px-5 py-2.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={saveChecklistChanges}
+                    className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {saving ? "Saving..." : "Confirm Save"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-xl font-bold text-gray-800">
+                  Discard Changes?
+                </h3>
+
+                <p className="mt-3 text-sm leading-6 text-gray-600">
+                  Are you sure you want to leave this task? Any unsaved
+                  checklist changes will be discarded.
+                </p>
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmation(null)}
+                    className="rounded-lg border border-gray-300 px-5 py-2.5 text-gray-700 hover:bg-gray-100"
+                  >
+                    Stay Here
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={discardChecklistChanges}
+                    className="rounded-lg bg-red-600 px-5 py-2.5 font-medium text-white hover:bg-red-700"
+                  >
+                    Discard & Leave
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };
