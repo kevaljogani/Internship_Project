@@ -12,9 +12,10 @@ const TaskDetails = () => {
   const { id } = useParams();
 
   const [task, setTask] = useState(null);
+  const [draftChecklist, setDraftChecklist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [updatingIndex, setUpdatingIndex] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const getStatusTagColor = (status) => {
     switch (status) {
@@ -38,6 +39,7 @@ const TaskDetails = () => {
       const response = await axiosInstance.get(`/tasks/${id}`);
 
       setTask(response.data);
+      setDraftChecklist(response.data.todoChecklist || []);
     } catch (error) {
       console.error("Error fetching task details:", error);
 
@@ -51,49 +53,70 @@ const TaskDetails = () => {
     }
   };
 
-  // Update checklist
-  const updateTodoChecklist = async (index) => {
-    if (!task || updatingIndex !== null) return;
+  // Update checklist locally without calling the API
+  const updateTodoChecklist = (index) => {
+    if (saving) return;
 
-    const previousTask = task;
-
-    const updatedChecklist = task.todoChecklist.map((item, itemIndex) =>
-      itemIndex === index
-        ? { ...item, completed: !item.completed }
-        : item
+    setDraftChecklist((previousChecklist) =>
+      previousChecklist.map((item, itemIndex) =>
+        itemIndex === index
+          ? { ...item, completed: !item.completed }
+          : item
+      )
     );
+  };
 
-    // Update UI immediately
-    setTask({
-      ...task,
-      todoChecklist: updatedChecklist,
-    });
+  // Check whether there are unsaved changes
+  const hasChanges =
+    task &&
+    JSON.stringify(
+      draftChecklist.map((item) => ({
+        completed: item.completed,
+      }))
+    ) !==
+      JSON.stringify(
+        (task.todoChecklist || []).map((item) => ({
+          completed: item.completed,
+        }))
+      );
+
+  // Save all checklist changes
+  const saveChecklistChanges = async () => {
+    if (!task || !hasChanges || saving) return;
 
     try {
-      setUpdatingIndex(index);
+      setSaving(true);
 
       const response = await axiosInstance.put(`/tasks/${id}/todo`, {
-        todoChecklist: updatedChecklist,
+        todoChecklist: draftChecklist,
       });
 
       if (response.data?.task) {
         setTask(response.data.task);
+        setDraftChecklist(response.data.task.todoChecklist || []);
       } else {
         await getTaskDetailsById();
       }
-    } catch (error) {
-      console.error("Error updating checklist:", error);
 
-      // Revert UI if backend update fails
-      setTask(previousTask);
+      toast.success("Checklist changes saved successfully!");
+    } catch (error) {
+      console.error("Error saving checklist:", error);
 
       toast.error(
         error.response?.data?.message ||
-          "Unable to update checklist. Please try again."
+          "Unable to save changes. Please try again."
       );
     } finally {
-      setUpdatingIndex(null);
+      setSaving(false);
     }
+  };
+
+  // Discard unsaved checklist changes
+  const cancelChecklistChanges = () => {
+    if (saving || !task) return;
+
+    setDraftChecklist(task.todoChecklist || []);
+    toast.success("Unsaved changes discarded.");
   };
 
   // Open attachment link safely
@@ -123,6 +146,10 @@ const TaskDetails = () => {
       getTaskDetailsById();
     }
   }, [id]);
+
+  const completedCount = draftChecklist.filter(
+    (item) => item.completed
+  ).length;
 
   return (
     <DashboardLayout activeMenu="My Tasks">
@@ -212,9 +239,9 @@ const TaskDetails = () => {
 
                     <AvatarGroup
                       avatars={
-                        task.assignedTo?.map(
-                          (item) => item?.profileImageUrl
-                        ).filter(Boolean) || []
+                        task.assignedTo
+                          ?.map((item) => item?.profileImageUrl)
+                          .filter(Boolean) || []
                       }
                       maxVisible={5}
                     />
@@ -229,21 +256,19 @@ const TaskDetails = () => {
                     </label>
 
                     <span className="text-xs text-gray-500">
-                      {task.todoChecklist?.filter(
-                        (item) => item.completed
-                      ).length || 0}
+                      {completedCount}
                       {" / "}
-                      {task.todoChecklist?.length || 0} completed
+                      {draftChecklist.length} completed
                     </span>
                   </div>
 
-                  {task.todoChecklist?.length > 0 ? (
-                    task.todoChecklist.map((item, index) => (
+                  {draftChecklist.length > 0 ? (
+                    draftChecklist.map((item, index) => (
                       <TodoCheckList
                         key={item._id || `todo_${index}`}
                         text={item.text}
                         isChecked={item.completed}
-                        disabled={updatingIndex !== null}
+                        disabled={saving}
                         onChange={() => updateTodoChecklist(index)}
                       />
                     ))
@@ -251,6 +276,29 @@ const TaskDetails = () => {
                     <p className="text-sm text-gray-500 p-3">
                       No checklist items available.
                     </p>
+                  )}
+
+                  {/* Save and Cancel buttons */}
+                  {draftChecklist.length > 0 && (
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 mt-5 pt-4 border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={cancelChecklistChanges}
+                        disabled={!hasChanges || saving}
+                        className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Cancel Changes
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={saveChecklistChanges}
+                        disabled={!hasChanges || saving}
+                        className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {saving ? "Saving..." : "Save Changes"}
+                      </button>
+                    </div>
                   )}
                 </div>
 

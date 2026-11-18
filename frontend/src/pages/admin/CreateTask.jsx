@@ -38,6 +38,7 @@ const CreateTask = () => {
   const [loading, setLoading] = useState(false);
   const [fetchingTask, setFetchingTask] = useState(false);
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
+  const [openUpdateConfirm, setOpenUpdateConfirm] = useState(false);
 
   const handleValueChange = (key, value) => {
     setTaskData((prev) => ({
@@ -83,50 +84,8 @@ const CreateTask = () => {
     }
   };
 
-  // Create or update task
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!taskData.title.trim()) {
-      setError("Title is required.");
-      return;
-    }
-
-    if (!taskData.description.trim()) {
-      setError("Description is required.");
-      return;
-    }
-
-    if (
-      !taskData.dueDate ||
-      Number.isNaN(new Date(taskData.dueDate).getTime())
-    ) {
-      setError("A valid due date is required.");
-      return;
-    }
-
-    if (taskData.assignedTo.length === 0) {
-      setError("Assign the task to at least one team member.");
-      return;
-    }
-
-    if (taskData.todoChecklist.length === 0) {
-      setError("Add at least one checklist item.");
-      return;
-    }
-
-    // Ask for confirmation before updating an existing task
-    if (taskId) {
-      const confirmed = window.confirm(
-        "Are you sure you want to update this task?"
-      );
-
-      if (!confirmed) {
-        return;
-      }
-    }
-
+  // Save task after validation and confirmation
+  const saveTask = async () => {
     const todoChecklist = taskData.todoChecklist.map((item) => {
       const previousItem = currentTask?.todoChecklist?.find(
         (todo) => todo.text === item
@@ -161,6 +120,7 @@ const CreateTask = () => {
         toast.success("Task created successfully!");
       }
 
+      setOpenUpdateConfirm(false);
       navigate("/admin/tasks");
     } catch (error) {
       console.error("Task submission failed:", error);
@@ -171,9 +131,53 @@ const CreateTask = () => {
 
       setError(message);
       toast.error(message);
+      setOpenUpdateConfirm(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Validate form before saving
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!taskData.title.trim()) {
+      setError("Title is required.");
+      return;
+    }
+
+    if (!taskData.description.trim()) {
+      setError("Description is required.");
+      return;
+    }
+
+    if (
+      !taskData.dueDate ||
+      Number.isNaN(new Date(taskData.dueDate).getTime())
+    ) {
+      setError("A valid due date is required.");
+      return;
+    }
+
+    if (taskData.assignedTo.length === 0) {
+      setError("Assign the task to at least one team member.");
+      return;
+    }
+
+    if (taskData.todoChecklist.length === 0) {
+      setError("Add at least one checklist item.");
+      return;
+    }
+
+    // Show centered confirmation only when updating
+    if (taskId) {
+      setOpenUpdateConfirm(true);
+      return;
+    }
+
+    // Create task directly after validation
+    saveTask();
   };
 
   // Delete task
@@ -384,6 +388,49 @@ const CreateTask = () => {
           </form>
         </div>
       </div>
+
+      {/* Centered update confirmation dialog */}
+      {openUpdateConfirm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="update-confirm-title"
+          >
+            <h3
+              id="update-confirm-title"
+              className="text-xl font-bold text-gray-800"
+            >
+              Confirm Task Update
+            </h3>
+
+            <p className="mt-3 text-sm leading-6 text-gray-600">
+              Are you sure you want to save the changes made to this task?
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => setOpenUpdateConfirm(false)}
+                className="rounded-lg border border-gray-300 px-5 py-2.5 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={loading}
+                onClick={saveTask}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading ? "Updating..." : "Confirm Update"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation */}
       <Modal

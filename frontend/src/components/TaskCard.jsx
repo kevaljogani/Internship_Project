@@ -52,12 +52,20 @@ const TaskCard = ({
       : "N/A";
   };
 
+  // A newly created task has no meaningful update.
+  const isUpdated =
+    createdAt &&
+    updatedAt &&
+    moment(updatedAt).isValid() &&
+    moment(createdAt).isValid() &&
+    moment(updatedAt).valueOf() > moment(createdAt).valueOf();
+
   return (
     <div
       className="bg-white rounded-xl py-4 shadow-md shadow-gray-100 border border-gray-200/50 cursor-pointer"
       onClick={onClick}
     >
-      <div className="flex items-end gap-3 px-4">
+      <div className="flex items-end gap-3 px-4 flex-wrap">
         <div
           className={`text-[11px] font-medium ${getStatusTagColor()} px-4 py-0.5 rounded-lg`}
         >
@@ -69,6 +77,12 @@ const TaskCard = ({
         >
           {priority} Priority
         </div>
+
+        {isUpdated && (
+          <div className="text-[11px] font-medium bg-purple-100 text-purple-800 px-3 py-0.5 rounded-lg">
+            Updated
+          </div>
+        )}
       </div>
 
       <div
@@ -99,7 +113,11 @@ const TaskCard = ({
       </div>
 
       <div className="px-4">
-        <div className="grid grid-cols-3 gap-2 my-3">
+        <div
+          className={`grid ${
+            isUpdated ? "grid-cols-3" : "grid-cols-2"
+          } gap-2 my-3`}
+        >
           <div>
             <label className="text-xs text-gray-500">
               Created On
@@ -109,14 +127,16 @@ const TaskCard = ({
             </p>
           </div>
 
-          <div>
-            <label className="text-xs text-gray-500">
-              Updated On
-            </label>
-            <p className="text-[12px] font-medium text-gray-900">
-              {formatDate(updatedAt)}
-            </p>
-          </div>
+          {isUpdated && (
+            <div>
+              <label className="text-xs text-gray-500">
+                Updated On
+              </label>
+              <p className="text-[12px] font-medium text-purple-700">
+                {formatDate(updatedAt)}
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="text-xs text-gray-500">
