@@ -19,6 +19,9 @@ const SignUp = () => {
   const [profilePic, setProfilePic] = useState(null)
   const [adminInviteToken, setAdminInviteToken] = useState("")
   const [showAdminInviteToken, setShowAdminInviteToken] = useState(false)
+  
+  // New state to toggle between user and admin signup mode
+  const [isAdminMode, setIsAdminMode] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -55,7 +58,8 @@ const SignUp = () => {
         email,
         password,
         profileImageUrl,
-        adminJoinCode: adminInviteToken,
+        // If not in admin mode, send empty string so backend registers as a normal user
+        adminJoinCode: isAdminMode ? adminInviteToken : "",
       })
 
       if (response.data) {
@@ -87,15 +91,48 @@ const SignUp = () => {
               </div>
 
               <h1 className="text-2xl font-bold text-gray-800 mt-4 uppercase">
-                Join Project Flow
+                {isAdminMode ? "Admin Sign Up" : "User Sign Up"}
               </h1>
 
               <p className="text-gray-600 mt-1">
                 Start managing your projects efficiently
               </p>
+
+              {/* Toggle Buttons to switch between User and Admin Signup */}
+              <div className="flex justify-center gap-2 mt-4 bg-gray-100 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAdminMode(false)
+                    setAdminInviteToken("")
+                    setError(null)
+                  }}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    !isAdminMode
+                      ? "bg-white text-blue-600 shadow"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Developer / User
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAdminMode(true)
+                    setError(null)
+                  }}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    isAdminMode
+                      ? "bg-white text-blue-600 shadow"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Admin
+                </button>
+              </div>
             </div>
 
-            {/* Login Form */}
+            {/* Signup Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
               <ProfilePhotoSelector
                 image={profilePic}
@@ -104,7 +141,7 @@ const SignUp = () => {
 
               <div>
                 <label
-                  htmlFor="email"
+                  htmlFor="fullName"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Full Name
@@ -169,33 +206,36 @@ const SignUp = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Admin Invite Token
-                </label>
+              {/* Conditionally show Admin Invite Token only when Admin tab is selected */}
+              {isAdminMode && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Admin Invite Token
+                  </label>
 
-                <div className="relative">
-                  <input
-                    id="adminInviteTokem"
-                    type={showAdminInviteToken ? "text" : "password"}
-                    value={adminInviteToken}
-                    onChange={(e) => setAdminInviteToken(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
-                    placeholder="•••••••"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      id="adminInviteToken"
+                      type={showAdminInviteToken ? "text" : "password"}
+                      value={adminInviteToken}
+                      onChange={(e) => setAdminInviteToken(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                      placeholder="•••••••"
+                      required={isAdminMode}
+                    />
 
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
-                    onClick={() =>
-                      setShowAdminInviteToken(!showAdminInviteToken)
-                    }
-                  >
-                    {showAdminInviteToken ? <FaEyeSlash /> : <FaEye />}
-                  </button>
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+                      onClick={() =>
+                        setShowAdminInviteToken(!showAdminInviteToken)
+                      }
+                    >
+                      {showAdminInviteToken ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {error && <p className="text-red-500 text-sm">{error}</p>}
 
@@ -204,14 +244,14 @@ const SignUp = () => {
                   type="submit"
                   className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-0 focus:ring-offset-0 cursor-pointer uppercase"
                 >
-                  Sign Up
+                  {isAdminMode ? "Sign Up as Admin" : "Sign Up as User"}
                 </button>
               </div>
             </form>
 
             <div className="mt-6 text-center text-sm">
               <p className="text-gray-600">
-                Already have an accout?{" "}
+                Already have an account?{" "}
                 <Link
                   to={"/login"}
                   className="font-medium text-blue-600 hover:text-blue-500"
